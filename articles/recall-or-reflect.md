@@ -4,7 +4,7 @@ When I first wired agent memory into an incident-response system, I asked it eve
 
 ## The system
 
-WarRoom is the incident commander for PaySetu, a UPI and payments platform with a dozen services, from checkout and the NPCI-facing UPI switch to a Postgres orders cluster, Kafka, Redis and a double-entry ledger. When an alert fires:
+WarRoom is the incident commander for companies like PaySetu, a UPI and payments platform with a dozen services, from checkout and the NPCI-facing UPI switch to a Postgres orders cluster, Kafka, Redis and a double-entry ledger. For the chosen data base, Whenever an alert fires:
 - Deterministic code triages it: SEV1–SEV4, signals such as correlated deploys, degraded vendors, saturation, error-budget burn, scheduled-job overlap and duplicates, and role assignment.
 - An LLM recommends one remediation.
 - Guardrails decide whether that recommendation stands.
