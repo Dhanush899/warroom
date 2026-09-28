@@ -144,7 +144,8 @@ Recall is also scoped by tag with `tags_match="any_strict"`, so a query about or
 **5. Let memory widen what the agent may do, never what it must do.** The rules that page a human for money mismatches or refuse to blame a healthy vendor don't consult memory. That's what makes it safe to let memory handle the rest.
 
 If you're building anything where an LLM acts on past experience, the concepts in [what agent memory actually is](https://vectorize.io/what-is-agent-memory) are worth reading before you pick a design. For me, the biggest step up in reliability came from treating memory tags as a contract between retain time and decision time.
-<img width="709" height="537" alt="WhatsApp Image 2026-09-28 at 11 11 33 PM" src="https://github.com/user-attachments/assets/ceefa19b-cdfb-4c26-b51f-abfc8e659910" />
 <img width="709" height="537" alt="WhatsApp Image 2026-09-28 at 11 11 33 PM" src="https://github.com/user-attachments/assets/8906b0af-8826-44da-92cc-4863d3f22a85" />
 <img width="1666" height="902" alt="Screenshot 2026-09-28 225853" src="https://github.com/user-attachments/assets/ab24b49a-37bd-48cf-b43a-67a68453d483" />
+<img width="1600" height="1200" alt="WhatsApp Image 2026-09-28 at 10 56 02 PM" src="https://github.com/user-attachments/assets/fe03adbd-c193-4be1-ba91-a18d68dfa535" />
+
 
