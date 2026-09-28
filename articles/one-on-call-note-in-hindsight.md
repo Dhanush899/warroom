@@ -4,7 +4,9 @@ The most useful thing an on-call engineer writes is also the most neglected: the
 
 ## The system in one paragraph
 
-WarRoom is an incident commander for PaySetu, a UPI and payments platform: checkout, a UPI switch that talks to NPCI and partner banks, a card gateway, a double-entry ledger, a Postgres orders cluster behind pgbouncer, Redis, Kafka, notifications, search, KYC and a merchant dashboard.
+WarRoom is an incident commander for companies like PaySetu,  UPI and payments platforms checkout. 
+
+In the chosen database,
 
 For every alert, WarRoom:
 1. Runs deterministic triage: SEV1–SEV4 classification, signals such as a correlated deploy, a degraded vendor, saturation or error-budget burn, and role assignment.
