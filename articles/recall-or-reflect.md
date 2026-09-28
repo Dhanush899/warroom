@@ -1,5 +1,6 @@
-<img width="1666" height="902" alt="Screenshot 2026-09-28 225853" src="https://github.com/user-attachments/assets/e115623e-eeec-403c-988d-5bc928d4f97e" />
+
 # Recall or reflect? How I split Hindsight's two jobs
+
 
 When I first wired agent memory into an incident-response system, I asked it everything the same way. Within a day I had an agent reading a synthesized summary at 3 AM and trying to justify a production rollback with a paragraph nobody could trace back to a real incident. The fix wasn't a better prompt. It was admitting that memory has two different jobs, and giving each its own API call.
 
@@ -107,3 +108,9 @@ Those IDs came from recall. A reflect summary would have said "this has happened
 **5. Write the bank mission as seriously as a system prompt.** Recall and reflect both read through it. A few sentences about what this memory is for did more for reflect quality than any query tweaking.
 
 For the broader picture of why agents need memory beyond a vector index, Vectorize's piece on [agent memory for AI systems](https://vectorize.io/what-is-agent-memory) lays out the landscape well. My takeaway from building on it: split memory by who reads the answer. Code gets recall, people get reflect, and anything that touches production gets something it can cite.
+
+<img width="1666" height="902" alt="Screenshot 2026-09-28 225853" src="https://github.com/user-attachments/assets/e115623e-eeec-403c-988d-5bc928d4f97e" />
+<img width="709" height="537" alt="WhatsApp Image 2026-09-28 at 11 11 33 PM" src="https://github.com/user-attachments/assets/e2b7dfbd-990a-414e-82d8-bdb22f5a1d05" />
+<img width="1600" height="1200" alt="WhatsApp Image 2026-09-28 at 10 56 02 PM" src="https://github.com/user-attachments/assets/e2eb38e4-7e07-4b55-a180-a53ffd1a6eba" />
+
+
