@@ -1,4 +1,4 @@
-# One on-call note in Hindsight changed my agent's next answer
+# One on-call note in Hindsight changed my agent's next answer - Neharika 
 
 The most useful thing an on-call engineer writes is also the most neglected: the two sentences at the bottom of an incident explaining what actually fixed it. I built an incident agent around the idea that those two sentences should change what happens next time. Then I watched one note do exactly that.
 
