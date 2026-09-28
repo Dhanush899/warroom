@@ -118,3 +118,9 @@ I tested the last two with a UPI incident whose memories all said "NPCI blip, wa
 **5. Let action items ride along with fixes.** The most valuable thing Hindsight gave back wasn't the rollback. It was the unfinished promise from last week, resurfaced at the moment it mattered.
 
 If you're new to the idea, Vectorize's explainer on [what agent memory is and why agents need it](https://vectorize.io/what-is-agent-memory) is a good primer. My advice is simpler: pick the one sentence your humans already write after doing the hard work, and make sure your agent reads it next time.
+
+<img width="1666" height="902" alt="Screenshot 2026-09-28 225853" src="https://github.com/user-attachments/assets/b2c13f18-8e64-4ac5-873a-75923a870893" />
+<img width="1600" height="1200" alt="WhatsApp Image 2026-09-28 at 10 56 02 PM" src="https://github.com/user-attachments/assets/23973dc6-c250-4b2e-a120-18924a0963e2" />
+<img width="709" height="537" alt="WhatsApp Image 2026-09-28 at 11 11 33 PM" src="https://github.com/user-attachments/assets/b37e0a90-bf9c-4b5f-8b2e-14916eedd88c" />
+
+
