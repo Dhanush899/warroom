@@ -1,3 +1,4 @@
+<img width="1666" height="902" alt="Screenshot 2026-09-28 225853" src="https://github.com/user-attachments/assets/e115623e-eeec-403c-988d-5bc928d4f97e" />
 # Recall or reflect? How I split Hindsight's two jobs
 
 When I first wired agent memory into an incident-response system, I asked it everything the same way. Within a day I had an agent reading a synthesized summary at 3 AM and trying to justify a production rollback with a paragraph nobody could trace back to a real incident. The fix wasn't a better prompt. It was admitting that memory has two different jobs, and giving each its own API call.
