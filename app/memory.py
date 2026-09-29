@@ -18,7 +18,7 @@ import math
 import re
 import uuid
 from dataclasses import asdict, dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Any, Protocol
 
 from .config import get_settings
@@ -39,15 +39,18 @@ PROFILE_QUERY = (
     "Build a reliability profile of service {name} ({service_id}). Cover: (1) its recurring failure modes with "
     "typical magnitudes and times of day, (2) which remediation worked for each and how long it took, "
     "(3) repeat root causes and post-mortem action items that are still open, (4) alerts that are noisy or "
-    "known false positives, (5) concrete runbook guidance for the next on-call engineer. Be concise, bullet points."
+    "known false positives, (5) concrete runbook guidance for the next on-call engineer. Be concise, bullet points. "
+    "All incident times are India Standard Time (IST); always report times in IST, never UTC."
 )
 
 ORG_QUERY = (
     "Across all services, run a quarterly-style incident review: which failure modes repeat, which post-mortem "
     "action items keep not getting done (repeat root causes), which alerts are noisy and should be tuned, which "
     "services need reliability investment, and which third-party dependencies hurt us most. Give an incident "
-    "commander's briefing in bullet points."
+    "commander's briefing in bullet points. All incident times are IST; report times in IST, never UTC."
 )
+
+IST = timezone(timedelta(hours=5, minutes=30))  # incident timestamps in the dataset are Indian local time
 
 ACTION_VERB = {
     "rollback": "ROLLED BACK the correlated change",
@@ -270,7 +273,7 @@ class MemoryService:
                 + ([f"cause:{cause}"] if cause else [])
                 + sorted({f"signal:{s['code']}" for s in signals}))
         await self.backend.retain(
-            content=text, tags=tags, timestamp=datetime.fromisoformat(incident["started_at"]),
+            content=text, tags=tags, timestamp=datetime.fromisoformat(incident["started_at"]).replace(tzinfo=IST),
             document_id=f"resolution-{incident['id']}",
             metadata={"incident_id": incident["id"], "service_id": service["id"], "action": action},
         )

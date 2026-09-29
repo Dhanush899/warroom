@@ -18,11 +18,12 @@ const TEACH_NOTE =
   "rate to the canary check.";
 
 interface Props {
+  version: number;
   onChanged: () => void;
   goTo: (tab: "incidents" | "impact") => void;
 }
 
-export default function Story({ onChanged, goTo }: Props) {
+export default function Story({ version, onChanged, goTo }: Props) {
   const [data, setData] = useState<StoryData | null>(null);
   const [step, setStep] = useState(0);
   const [busy, setBusy] = useState<string | null>(null);
@@ -30,10 +31,11 @@ export default function Story({ onChanged, goTo }: Props) {
   const [note, setNote] = useState(TEACH_NOTE);
   const [memOff, setMemOff] = useState(false);
 
-  const refresh = useCallback(() => api.story().then(setData).catch((e) => setError(e.message)), []);
+  const refresh = useCallback(
+    () => api.story().then((d) => { setData(d); setError(null); }).catch((e) => setError(e.message)), []);
   useEffect(() => {
     refresh();
-  }, [refresh]);
+  }, [refresh, version]);
 
   /** Run a story action against a brain, then refresh everything. */
   const act = async (label: string, brain: Brain, fn: () => Promise<unknown>) => {

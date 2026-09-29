@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { api, type Memory, type Service } from "../api";
-import { Markdown, MemoryCard, Spinner } from "./ui";
+import { api, type Action, type Memory, type Service } from "../api";
+import { ACTION_SHORT, cleanMemory } from "../plain";
+import { Markdown, Spinner } from "./ui";
 
 const ORG = "__org__";
 
@@ -25,7 +26,7 @@ export default function Services({ version }: { version: number }) {
         {services.map((s) => (
           <button key={s.id} className={sel === s.id ? "selected" : ""} onClick={() => setSel(s.id)}>
             <div className="vendor">{s.name} <span className="tier">T{s.tier}</span></div>
-            <div className="muted small">{s.team} · {s.resolved}/{s.incidents} resolved this month</div>
+            <div className="muted small">{s.team} · {s.resolved}/{s.incidents} incidents resolved</div>
           </button>
         ))}
       </aside>
@@ -100,7 +101,7 @@ function ServiceProfile({ service }: { service: Service }) {
         <div className="section-head">
           <h3>Reliability profile (reflect)</h3>
           <button className="primary" onClick={r.run} disabled={r.loading || !memories?.length}>
-            {r.loading ? <><Spinner /> Reflecting over memories…</> : r.text ? "Rebuild profile" : "Build profile from memory"}
+            {r.loading ? <><Spinner /> Hindsight is reading every incident (~30 s)…</> : r.text ? "Rebuild profile" : "Build profile from memory"}
           </button>
         </div>
         {r.error && <div className="banner error">{r.error}</div>}
@@ -110,17 +111,65 @@ function ServiceProfile({ service }: { service: Service }) {
       </div>
 
       <div className="section">
-        <h3>What WarRoom remembers {memories && <span className="count">{memories.length}</span>}</h3>
+        <h3>What WarRoom remembers {memories && <span className="count">{groupByIncident(memories).length} incidents</span>}</h3>
         {!memories ? <Spinner /> : memories.length === 0 ? (
-          <p className="muted">Nothing yet. Resolve one of this service's incidents, seed August history or run a replay.</p>
+          <p className="muted">Nothing yet. Resolve one of this service's incidents and it shows up here.</p>
         ) : (
           <div className="memories">
-            {[...memories].sort((a, b) => (b.timestamp ?? "").localeCompare(a.timestamp ?? "")).map((m) => (
-              <MemoryCard key={m.id} m={m} />
-            ))}
+            {groupByIncident(memories).map((g) => <IncidentMemory key={g.key} g={g} />)}
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+interface MemoryGroup {
+  key: string;
+  incident: string | null;
+  date: string | null;
+  action: Action | null;
+  cause: string | null;
+  facts: string[];
+}
+
+/** Hindsight stores one incident as several facts; show one card per incident, newest first. */
+function groupByIncident(ms: Memory[]): MemoryGroup[] {
+  const groups = new Map<string, MemoryGroup>();
+  for (const m of ms) {
+    const tag = (p: string) => m.tags.find((t) => t.startsWith(p))?.slice(p.length) ?? null;
+    const incident = tag("incident:");
+    const key = incident ?? m.id;
+    const g = groups.get(key) ?? { key, incident, date: null, action: null, cause: null, facts: [] };
+    g.date = g.date ?? m.timestamp?.slice(0, 10) ?? null;
+    g.action = g.action ?? (tag("action:") as Action | null);
+    g.cause = g.cause ?? tag("cause:");
+    const fact = cleanMemory(m.text);
+    if (fact && !g.facts.includes(fact)) g.facts.push(fact);
+    groups.set(key, g);
+  }
+  return [...groups.values()].sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
+}
+
+function IncidentMemory({ g }: { g: MemoryGroup }) {
+  const [open, setOpen] = useState(false);
+  const shown = open ? g.facts : g.facts.slice(0, 1);
+  return (
+    <div className="memory">
+      <div className="memory-head">
+        {g.incident && <b className="mono small">{g.incident}</b>}
+        {g.date && <span className="muted small">{g.date}</span>}
+        <span className="mem-tags">
+          {g.cause && <span className="tag">{g.cause}</span>}
+          {g.action && ACTION_SHORT[g.action] && <span className="tag dec">fixed by: {ACTION_SHORT[g.action]}</span>}
+        </span>
+      </div>
+      {shown.map((f, i) => <p key={i}>{f}</p>)}
+      {g.facts.length > 1 && (
+        <button className="link" onClick={() => setOpen(!open)}>
+          {open ? "show less" : `+ ${g.facts.length - 1} more fact${g.facts.length > 2 ? "s" : ""} from this incident`}
+        </button>
+      )}
     </div>
   );
 }
@@ -139,7 +188,7 @@ function OrgReview() {
         <div className="section-head">
           <h3>Incident commander's briefing</h3>
           <button className="primary" onClick={r.run} disabled={r.loading}>
-            {r.loading ? <><Spinner /> Reflecting…</> : r.text ? "Rebuild" : "Reflect across all services"}
+            {r.loading ? <><Spinner /> Hindsight is reading the whole bank (~40 s)…</> : r.text ? "Rebuild" : "Reflect across all services"}
           </button>
         </div>
         {r.error && <div className="banner error">{r.error}</div>}

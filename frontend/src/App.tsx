@@ -21,6 +21,15 @@ export default function App() {
     api.health().then((h) => { setHealth(h); setError(null); }).catch((e) => setError(String(e.message ?? e)));
   }, [version]);
 
+  // Server not up yet (or restarting)? Keep retrying, then reload every view once it answers.
+  useEffect(() => {
+    if (!error) return;
+    const t = window.setInterval(() => {
+      api.health().then(() => { setError(null); refresh(); }).catch(() => undefined);
+    }, 2000);
+    return () => window.clearInterval(t);
+  }, [error, refresh]);
+
   const toggleMemory = async () => {
     if (!health) return;
     await api.toggleMemory(!health.memory_enabled);
@@ -75,20 +84,22 @@ export default function App() {
           </div>
         )}
       </header>
-      {error && <div className="banner error" role="alert">Can't reach the WarRoom server: {error}. Start it with <code>uvicorn app.api:app --port 8020</code>.</div>}
+      {error && <div className="banner error" role="alert">Can't reach the WarRoom server ({error}). Retrying every 2 seconds… if this stays, start it with <code>start.bat</code>.</div>}
       {health && !health.llm_configured && <div className="banner off" role="status">No GROQ_API_KEY: WarRoom will safely page a human for everything.</div>}
       {health && !health.memory_enabled && (
         <div className="banner off" role="status">Memory is off: WarRoom can't recall any past incident, so it pages a human for everything.</div>
       )}
       <main id="main">
-        {tab === "story" && <Story onChanged={refresh} goTo={setTab} />}
+        {tab === "story" && <Story version={version} onChanged={refresh} goTo={setTab} />}
         {tab === "incidents" && <Board version={version} />}
         {tab === "memory" && <Services version={version} />}
         {tab === "impact" && <Impact version={version} onChanged={refresh} />}
       </main>
-      <footer className="foot muted small">
-        Memory by Hindsight ({health?.memory_backend === "hindsight" ? `bank ${health.bank_id}` : "local stand-in"}) · reasoning by Groq {health?.models[0] ?? ""} · PaySetu is a fictional company
-      </footer>
+      {health && (
+        <footer className="foot muted small">
+          Memory by Hindsight ({health.memory_backend === "hindsight" ? `bank ${health.bank_id}` : "local stand-in"}) · reasoning by Groq {health.models[0] ?? ""} · PaySetu is a fictional company
+        </footer>
+      )}
     </div>
   );
 }

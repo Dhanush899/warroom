@@ -91,7 +91,9 @@ post-mortems, and refuses to reuse an old fix when a familiar alert is actually 
 12 services (checkout-api, upi-switch, payments-gateway, ledger-service, orders-db, session-cache,
 auth-service, kafka-events, notification-service, search-service, kyc-service, merchant-dashboard), each
 with team, on-call rotation, SLOs, vendors and scheduled jobs. **21 resolved August incidents** (history
-to seed) and **58 September incidents** built from 14 recurring failure modes with consistent fixes:
+to seed), **58 September incidents** (the replayed learning month) and **11 October incidents left open**
+for live demos on the month-trained brain (including a no-deploy checkout failure that must be escalated),
+built from 14 recurring failure modes with consistent fixes:
 
 | Service | Recurring pattern | Fix learned |
 |---|---|---|
@@ -117,6 +119,12 @@ integrity → SEV1); and a **duplicate** checkout alert re-firing 12 minutes int
 The generator validates that every ground-truth fix has the signals it depends on.
 
 ## Setup
+
+**Quickest (Windows):** copy `.env.example` to `.env`, add your keys, then double-click **`start.bat`**. It sets
+everything up on first run, builds the UI, and serves the whole app from one server at http://localhost:8020.
+Keep that window open while you demo.
+
+Manual setup:
 
 ```bash
 python -m venv .venv

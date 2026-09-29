@@ -15,6 +15,12 @@ log = logging.getLogger(__name__)
 
 WEEKS = [(1, 7, "Week 1 (1-7 Sep)"), (8, 14, "Week 2 (8-14 Sep)"),
          (15, 21, "Week 3 (15-21 Sep)"), (22, 30, "Week 4 (22-30 Sep)")]
+# The replayed learning month. Later incidents (October) stay open for live demos and are never replayed.
+REPLAY_MONTH = "2026-09"
+
+
+def _in_month(incident: dict[str, Any]) -> bool:
+    return incident["started_at"].startswith(REPLAY_MONTH)
 
 
 def simulated_mttr(truth: dict[str, Any] | None, agreed: bool, needs_human: bool) -> int | None:
@@ -138,7 +144,7 @@ class WarRoom:
         if self.replay_status["running"]:
             return self.replay_status
         todo = [i for i in self.store.incidents
-                if i["day"] <= through_day and i["id"] not in self.store.state["resolutions"]]
+                if _in_month(i) and i["day"] <= through_day and i["id"] not in self.store.state["resolutions"]]
         self.replay_status = {"running": True, "done": 0, "total": len(todo), "current": None,
                               "error": None, "through_day": through_day}
         self._replay_task = asyncio.create_task(self._replay(todo))
@@ -166,10 +172,12 @@ class WarRoom:
         gt = self.store.ground_truth
         weeks = []
         for lo, hi, label in WEEKS:
-            rows = [(i, res[i["id"]]) for i in self.store.incidents if lo <= i["day"] <= hi and i["id"] in res]
+            rows = [(i, res[i["id"]]) for i in self.store.incidents
+                    if _in_month(i) and lo <= i["day"] <= hi and i["id"] in res]
             weeks.append({"label": label, **_summary(rows, gt)})
-        all_rows = [(self.store.by_id[k], r) for k, r in res.items()]
-        return {"weeks": weeks, "totals": {"incidents": len(self.store.incidents), **_summary(all_rows, gt)}}
+        month = [i for i in self.store.incidents if _in_month(i)]
+        all_rows = [(i, res[i["id"]]) for i in month if i["id"] in res]
+        return {"weeks": weeks, "totals": {"incidents": len(month), **_summary(all_rows, gt)}}
 
 
 def _summary(rows: list[tuple[dict, dict]], gt: dict[str, dict]) -> dict[str, Any]:

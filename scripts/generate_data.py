@@ -357,6 +357,20 @@ def a_kafka_midday(when, n):
                       "anomaly_kafka")
 
 
+def a_checkout_no_deploy(when, n):
+    err = 0.068
+    inc = base("checkout-api", when, "CheckoutHigh5xxRate", "Prometheus",
+               f"5xx ratio {err:.1%} over 5m on checkout-api", {
+                   "error_rate": err, "p99_ms": 910, "saturation": 0.52, "burn_rate": 41.0,
+                   "affected_users_pct": 21.4, "failed_txn_per_min": 1480},
+               ["ERROR dial tcp: lookup payments-gateway.production.svc.cluster.local: no such host",
+                "INFO no deploys, flag or config changes on checkout-api in the last 6h"])
+    return inc, truth("escalate", "coredns-config-drift",
+                      "Looked like the usual bad-deploy 5xx, but nothing was deployed: rollback impossible. War room "
+                      "found a CoreDNS config change in the cluster failing service lookups; human IC coordinated the "
+                      "revert. New failure mode.", 65, 65, "anomaly_checkout")
+
+
 def a_duplicate(parent: dict[str, Any], when: datetime) -> tuple[dict[str, Any], Truth]:
     inc = json.loads(json.dumps(parent))
     inc["started_at"] = iso(when)
@@ -397,6 +411,14 @@ SEPTEMBER = {
 ANOMALIES = [(a_upi_spike, 22, "14:20"), (a_ledger_mismatch, 26, "23:42"), (a_kafka_midday, 21, "14:05")]
 DUPLICATE_OF = ("checkout_deploy", 16, 12)  # re-fire 12 min after the 16 Sep deploy incident
 
+# October 1-4 (left OPEN on purpose): new alerts for the month-trained brain to handle live.
+# 1 Oct is a Thursday, 2 Oct a Friday (flash sale), 4 Oct a Sunday (JWKS rotation).
+OCTOBER = {
+    "db_backup_lag": [1], "checkout_deploy": [1], "db_pool": [1], "upi_npci": [2], "cache_flash": [2],
+    "kafka_eod": [2], "sms_failover": [3], "kyc_digilocker": [3], "auth_jwks": [4], "pg_acs": [4],
+}
+OCTOBER_ANOMALIES = [(a_checkout_no_deploy, 3, "12:40")]
+
 # August history (already resolved): Fridays 7/14/21/28, Sundays 2/9/16/23/30
 AUGUST = {
     "checkout_deploy": [5, 19], "upi_npci": [4, 13, 26], "db_backup_lag": [3, 12, 24], "db_pool": [11, 25],
@@ -410,7 +432,7 @@ def build(schedule: dict[str, list[int]], month: int) -> list[tuple[dict, Truth]
     for name, days in schedule.items():
         gen, times = PATTERNS[name]
         for n, day in enumerate(days):
-            inc, t = gen(at(day, times[n % len(times)], month), n + (3 if month == 9 else 0))
+            inc, t = gen(at(day, times[n % len(times)], month), n + {8: 0, 9: 3, 10: 7}[month])
             out.append((inc, t))
     return out
 
@@ -453,6 +475,15 @@ def main() -> None:
 
     incidents = [inc for inc, _ in sept]
     ground = {inc["id"]: t for inc, t in sept}
+    n_sept = len(incidents)
+
+    # ---- October (open; never replayed). Generated after September so September stays identical. ----
+    octo = build(OCTOBER, 10)
+    for gen, day, hhmm in OCTOBER_ANOMALIES:
+        octo.append(gen(at(day, hhmm, 10), 0))
+    assign_ids(octo, "INC")
+    incidents += [inc for inc, _ in octo]
+    ground.update({inc["id"]: t for inc, t in octo})
 
     # ---- validate: the signals each fix depends on must be present ----
     need = {"rollback": {"DEPLOY_CORRELATED"}, "feature_flag": set(), "vendor": {"DEPENDENCY_DEGRADED"},
@@ -474,6 +505,8 @@ def main() -> None:
             problems.append("ledger mismatch must be SEV1")
         if t["pattern"] == "anomaly_kafka" and "SCHEDULED_JOB" in codes:
             problems.append("midday kafka lag must not overlap the EOD batch")
+        if t["pattern"] == "anomaly_checkout" and codes & {"DEPLOY_CORRELATED", "FLAG_CHANGE", "CONFIG_CHANGE"}:
+            problems.append("no-deploy checkout incident must have nothing to roll back")
         if t["pattern"] in ("kafka_eod", "db_backup_lag", "auth_jwks", "search_reindex", "ledger_recon") \
                 and "SCHEDULED_JOB" not in codes:
             problems.append(f"{inc['id']} {t['pattern']}: expected SCHEDULED_JOB")
@@ -487,7 +520,8 @@ def main() -> None:
 
     sev = Counter(triage(inc, S[inc["service_id"]], incidents[:i])["severity"] for i, inc in enumerate(incidents))
     acts = Counter(t["expected_action"] for t in ground.values())
-    print(f"{len(SERVICES)} services, {len(history)} August incidents, {len(incidents)} September incidents")
+    print(f"{len(SERVICES)} services, {len(history)} August incidents, {n_sept} September incidents, "
+          f"{len(incidents) - n_sept} open October incidents")
     print("severity:", dict(sorted(sev.items())))
     print("expected actions:", dict(acts.most_common()))
 

@@ -462,5 +462,93 @@
   "base_mttr": 20,
   "assisted_mttr": 3,
   "pattern": "ledger_recon"
+ },
+ "INC-1001-01": {
+  "expected_action": "suppress",
+  "cause": "backup-io-replica-lag",
+  "note": "Known noise: nightly pg_basebackup saturates IO on replica-2 and lag hits 115s; replica-2 is drained from the read pool during backup so no user impact. Acked. Alert-tuning ticket OBS-44 (silence during backup window) still open.",
+  "base_mttr": 20,
+  "assisted_mttr": 2,
+  "pattern": "db_backup_lag"
+ },
+ "INC-1001-02": {
+  "expected_action": "rollback",
+  "cause": "bad-deploy-canary-misses-5xx",
+  "note": "Rolled back checkout-api v2.48.0 (deployed 6 min before the alert); 5xx back to baseline 4 min after rollback. Canary analysis only checks latency, not 5xx ratio. Action item AI-CHK-12 'add 5xx ratio to canary gate' still open.",
+  "base_mttr": 38,
+  "assisted_mttr": 9,
+  "pattern": "checkout_deploy"
+ },
+ "INC-1001-03": {
+  "expected_action": "restart",
+  "cause": "reporting-job-on-primary",
+  "note": "Killed the finance reporting export queries on the primary and did a rolling restart of pgbouncer; pool recovered in 3 min. Root cause: reporting export reads from the primary instead of a replica. Action item AI-DATA-7 'move finance export to replica-1' still NOT done.",
+  "base_mttr": 50,
+  "assisted_mttr": 12,
+  "pattern": "db_pool"
+ },
+ "INC-1002-01": {
+  "expected_action": "vendor",
+  "cause": "npci-psp-degradation",
+  "note": "NPCI/Yes Bank side degradation (U28/U30 codes). Raised ticket with NPCI, posted status page banner, enabled smart retry. Recovered on its own in ~25 min. Typical failure 6-9% in these episodes.",
+  "base_mttr": 35,
+  "assisted_mttr": 10,
+  "pattern": "upi_npci"
+ },
+ "INC-1002-02": {
+  "expected_action": "scale",
+  "cause": "flash-sale-capacity",
+  "note": "Friday flash sale traffic. Scaled session-cache from 6 to 9 shards; evictions stopped in 5 min. Pre-scaling before sales is on the capacity plan (CAP-9).",
+  "base_mttr": 25,
+  "assisted_mttr": 6,
+  "pattern": "cache_flash"
+ },
+ "INC-1002-03": {
+  "expected_action": "scale",
+  "cause": "eod-batch-consumer-capacity",
+  "note": "EOD batch publish; lag 275,527. Scaled ledger-consumer from 12 to 24 replicas, lag drained in 18 min. No user impact.",
+  "base_mttr": 30,
+  "assisted_mttr": 5,
+  "pattern": "kafka_eod"
+ },
+ "INC-1003-01": {
+  "expected_action": "failover",
+  "cause": "primary-sms-throttling",
+  "note": "Primary SMS provider MsgBharat throttling (429). Failed over OTP traffic to TextNova via provider switch; OTP success back to 99% in 3 min. Switch back after vendor confirms.",
+  "base_mttr": 25,
+  "assisted_mttr": 5,
+  "pattern": "sms_failover"
+ },
+ "INC-1003-02": {
+  "expected_action": "feature_flag",
+  "cause": "digilocker-timeouts",
+  "note": "DigiLocker degraded. Switched flag kyc.docs_fallback=upload so users upload PAN/Aadhaar images for manual review; onboarding continued. Flag reverted after DigiLocker recovered.",
+  "base_mttr": 40,
+  "assisted_mttr": 7,
+  "pattern": "kyc_digilocker"
+ },
+ "INC-1003-03": {
+  "expected_action": "escalate",
+  "cause": "coredns-config-drift",
+  "note": "Looked like the usual bad-deploy 5xx, but nothing was deployed: rollback impossible. War room found a CoreDNS config change in the cluster failing service lookups; human IC coordinated the revert. New failure mode.",
+  "base_mttr": 65,
+  "assisted_mttr": 65,
+  "pattern": "anomaly_checkout"
+ },
+ "INC-1004-01": {
+  "expected_action": "monitor",
+  "cause": "jwks-cache-ttl-after-rotation",
+  "note": "Weekly JWKS key rotation; edge caches hold old keys for up to 5 min so some tokens fail validation. Self-heals by 04:07; watched it, no action. Few users at 4 AM.",
+  "base_mttr": 15,
+  "assisted_mttr": 2,
+  "pattern": "auth_jwks"
+ },
+ "INC-1004-02": {
+  "expected_action": "vendor",
+  "cause": "issuer-acs-slow",
+  "note": "Issuer ACS: ICICI slow. Opened ticket with issuer bank, showed 'try UPI' nudge to affected card BINs. Resolved from bank side in ~40 min.",
+  "base_mttr": 45,
+  "assisted_mttr": 12,
+  "pattern": "pg_acs"
  }
 }
